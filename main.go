@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	loadEnv()
+	loadEnv() //we load the environment variables
 	r := gin.Default()
-	r.POST("/mutant", service.MutantValidatePost())
-	r.GET("/stats", service.ReportGet())
+	r.POST("/mutant", service.MutantValidatePost()) //we expose post service to validate if it is mutant according to dna
+	r.GET("/stats", service.ReportGet())            //we expose get service to obtain the validated adns report
 	r.Run()
 }
 

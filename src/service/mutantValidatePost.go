@@ -11,11 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// type of data that we will receive in the body of the post service
 type requestMutantValidate struct {
 	Dna []string `json:"dna"`
 }
 
-var reSequence = regexp.MustCompile(`(A){4,}|(T){4,}|(C){4,}|(G){4,}`)
+var reSequence = regexp.MustCompile(`(A){4,}|(T){4,}|(C){4,}|(G){4,}`) //regexp used to validate that horizontal, vertical and oblique text strings contain sequences of the same 4 letters
 var isValidateData bool
 
 func init() {
@@ -27,7 +28,7 @@ func MutantValidatePost() gin.HandlerFunc {
 		dnas := requestMutantValidate{}
 		c.Bind(&dnas)
 		flagIsMutant := isMutant(dnas.Dna)
-		if !isValidateData {
+		if !isValidateData { //If we find a letter that is not included among those allowed, we return an http code 400
 			c.JSON(400, gin.H{
 				"message": "Bad request.",
 			})
@@ -56,12 +57,13 @@ func MutantValidatePost() gin.HandlerFunc {
 	}
 }
 
+//method used to validate the DNA obtained in the service request, returns true if it contains more than 1 sequence of 4 letters
 func isMutant(dna []string) bool {
 	var mutant = getMutantsById(strings.Join(dna, ","))
 	if (entity.Mutants{}) != mutant {
 		return mutant.IsMutant
 	}
-	reTypeCharacters := regexp.MustCompile(`\b[ATCG]{2,}\b`)
+	reTypeCharacters := regexp.MustCompile(`\b[ATCG]{2,}\b`) //regexp used to validate that the request only contains certain letters
 	var dataSequence int = 0
 	var arrayHorizontal []string
 	var arrayOblique []map[string]string
@@ -72,7 +74,7 @@ func isMutant(dna []string) bool {
 			isValidateData = false
 			break
 		} else {
-			dataSequence += len(reSequence.FindAllString(element, -1))
+			dataSequence += len(reSequence.FindAllString(element, -1)) //we validate the array of vertical words
 			if dataSequence > 1 {
 				break
 			}
@@ -139,6 +141,7 @@ func isMutant(dna []string) bool {
 	}
 }
 
+//method used to add letters to the properties of the array of oblique words
 func AddItemsArrayOblique(posHorizontal int, posVertical int, valueItem string, arrayOblique []map[string]string) []map[string]string {
 	for i := 0; i < len(arrayOblique); i++ {
 		var itemArrayOblique = arrayOblique[i]
@@ -164,6 +167,7 @@ func AddItemsArrayOblique(posHorizontal int, posVertical int, valueItem string, 
 	return arrayOblique
 }
 
+//method used to validate the list of words horizontal
 func validateArrayHorizontal(arrayHorizontal []string, dataSequence int) int {
 	for _, itemHorizontal := range arrayHorizontal {
 		dataSequence += len(reSequence.FindAllString(itemHorizontal, -1))
@@ -174,6 +178,7 @@ func validateArrayHorizontal(arrayHorizontal []string, dataSequence int) int {
 	return dataSequence
 }
 
+//method used to validate the list of words obliquely
 func validateArrayOblique(arrayOblique []map[string]string, dataSequence int) int {
 	for _, itemOblique := range arrayOblique {
 		for _, value := range itemOblique {
@@ -186,6 +191,7 @@ func validateArrayOblique(arrayOblique []map[string]string, dataSequence int) in
 	return dataSequence
 }
 
+//method used to validate if the DNA has been previously validated and is stored in the database
 func getMutantsById(dnaId string) entity.Mutants {
 	var mutant, err = repository.GetItem(dnaId)
 	if err != nil {
@@ -195,6 +201,7 @@ func getMutantsById(dnaId string) entity.Mutants {
 	}
 }
 
+//method used to save the DNA and the validation result in the database
 func saveAdn(mutant entity.Mutants) bool {
 	var err = repository.PutItem(mutant)
 	if err != nil {

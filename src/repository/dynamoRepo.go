@@ -14,6 +14,7 @@ import (
 
 var dynamo *dynamodb.DynamoDB
 
+//method used to create a connection to the DynamoDb database
 func CreateConnection() (db *dynamodb.DynamoDB) {
 	return dynamodb.New(session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1"),
@@ -21,6 +22,7 @@ func CreateConnection() (db *dynamodb.DynamoDB) {
 	})))
 }
 
+//method used to insert a new record in the mutants table
 func PutItem(mutant entity.Mutants) error {
 
 	dynamo = CreateConnection()
@@ -40,6 +42,7 @@ func PutItem(mutant entity.Mutants) error {
 	return err
 }
 
+//method used to get a record by id
 func GetItem(id string) (mutant entity.Mutants, err error) {
 
 	dynamo = CreateConnection()
@@ -62,6 +65,7 @@ func GetItem(id string) (mutant entity.Mutants, err error) {
 	return mutant, err
 }
 
+//method used to get the number of records by the isMutant field
 func GetCantItemsByIsMutant(isMutant bool) (int, error) {
 
 	dynamo = CreateConnection()
