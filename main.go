@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"main/src/repository"
 	"main/src/service"
 
 	"github.com/gin-gonic/gin"
@@ -20,5 +21,9 @@ func loadEnv() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env")
+	}
+	errCreateTable := repository.CreateTableIfNotExists()
+	if errCreateTable != nil {
+		log.Fatal("Error creando la tabla mutants")
 	}
 }

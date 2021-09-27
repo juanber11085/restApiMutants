@@ -2,5 +2,5 @@ package entity
 
 type Mutants struct {
 	Id       string
-	IsMutant bool
+	IsMutant int8
 }

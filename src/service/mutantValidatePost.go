@@ -35,7 +35,7 @@ func MutantValidatePost() gin.HandlerFunc {
 		} else {
 			var mutantSave = entity.Mutants{
 				Id:       strings.Join(dnas.Dna, ","),
-				IsMutant: flagIsMutant,
+				IsMutant: castBoolToInt(flagIsMutant),
 			}
 			var flagSave = saveAdn(mutantSave)
 			if !flagSave {
@@ -61,12 +61,12 @@ func MutantValidatePost() gin.HandlerFunc {
 func isMutant(dna []string) bool {
 	var mutant = getMutantsById(strings.Join(dna, ","))
 	if (entity.Mutants{}) != mutant {
-		return mutant.IsMutant
+		return mutant.IsMutant != 0
 	}
 	reTypeCharacters := regexp.MustCompile(`\b[ATCG]{2,}\b`) //regexp used to validate that the request only contains certain letters
 	var dataSequence int = 0
-	var arrayHorizontal []string
-	var arrayOblique []map[string]string
+	var arrayHorizontal []string         //string array used to add the letters horizontally and later validate them with the regular expression
+	var arrayOblique []map[string]string //array de map usado para añadir las letras de forma oblicua y posteriormente validarlas con la expresion regular
 	for i := 0; i < len(dna); i++ {
 		dna[i] = strings.ToUpper(dna[i])
 		var element = dna[i]
@@ -82,7 +82,7 @@ func isMutant(dna []string) bool {
 		var elementArray = strings.Split(element, "")
 		for j := 0; j < len(elementArray); j++ {
 			var itemElementArray = elementArray[j]
-			var itemMap map[string]string = make(map[string]string)
+			var itemMap map[string]string = make(map[string]string) //in the key of this map we add the horizontal position, vertical position and the direction in which the next letter should be found to add to the value of the map.
 			var posHorizontal int = i
 			var posVertical int = j
 			if len(arrayHorizontal) <= j {
@@ -209,4 +209,11 @@ func saveAdn(mutant entity.Mutants) bool {
 	} else {
 		return true
 	}
+}
+
+func castBoolToInt(b bool) int8 {
+	if b {
+		return 1
+	}
+	return 0
 }

@@ -1,10 +1,13 @@
 package repository
 
 import (
+	"log"
 	"main/src/repository/entity"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -34,7 +37,7 @@ func PutItem(mutant entity.Mutants) error {
 				S: aws.String(mutant.Id),
 			},
 			"isMutant": {
-				BOOL: aws.Bool(mutant.IsMutant),
+				N: aws.String(strconv.Itoa(int(mutant.IsMutant))),
 			},
 		},
 	})
@@ -66,7 +69,7 @@ func GetItem(id string) (mutant entity.Mutants, err error) {
 }
 
 //method used to get the number of records by the isMutant field
-func GetCantItemsByIsMutant(isMutant bool) (int, error) {
+func GetCantItemsByIsMutant(isMutant int8) (int, error) {
 
 	dynamo = CreateConnection()
 
@@ -93,4 +96,55 @@ func GetCantItemsByIsMutant(isMutant bool) (int, error) {
 	}
 
 	return int(*result.Count), nil
+}
+
+//method used to create the mutants table if it does not exist
+func CreateTableIfNotExists() error {
+	dynamo = CreateConnection()
+	const table = "mutants"
+	_, err := dynamo.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(table),
+	})
+	if awserr, ok := err.(awserr.Error); ok {
+		if awserr.Code() == "ResourceNotFoundException" {
+			_, err = dynamo.CreateTable(&dynamodb.CreateTableInput{
+				TableName: aws.String(table),
+				ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+					ReadCapacityUnits:  aws.Int64(int64(1)),
+					WriteCapacityUnits: aws.Int64(int64(1)),
+				},
+				KeySchema: []*dynamodb.KeySchemaElement{{
+					AttributeName: aws.String("id"),
+					KeyType:       aws.String("HASH"),
+				}, {
+					AttributeName: aws.String("isMutant"),
+					KeyType:       aws.String("RANGE"),
+				}},
+				AttributeDefinitions: []*dynamodb.AttributeDefinition{{
+					AttributeName: aws.String("id"),
+					AttributeType: aws.String("S"),
+				}, {
+					AttributeName: aws.String("isMutant"),
+					AttributeType: aws.String("N"),
+				}},
+			})
+			if err != nil {
+				log.Print(err)
+				return err
+			}
+
+			err = dynamo.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+				TableName: aws.String(table),
+			})
+			if err != nil {
+				log.Print(err)
+				return err
+			}
+		}
+	}
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
 }
