@@ -15,7 +15,16 @@ Which represent the access data of the AWS user with the respective permissions 
 If you have Docker installed you can create an image and start it with the following commands:
         - docker build -t [nameImage] .
         - docker run -p 8080:8080 -tid [nameImage]
-5. Consume the services:
+5. To deploy the image on AWS, you must first push to hub from the Docker console to upload the image to the cloud.
+6. The AWS ECS service was used to deploy this application. The following steps must be followed:
+        - First a task definition of type fargate is created in ECS where the container image is the one generated and loaded in Docker. Ports 8080 and 80 are mapped to this container
+        - second, a Networking only cluster is created
+        - Finally, in the cluster, the task created in the first step is executed
+7. Consume the services:
+        - POST -> URL: [IP-GenerateTask]:8080/mutant
+                  Body: {"dna": ["ATGCGA","CAGTGC","TTATTT","AGACGG","GCGTCA","TCACTG"]}
+        - GET -> URL: [IP-GenerateTask]:8080/stats
+if run locally consume the services:
         - POST -> URL: localhost:8080/mutant
                   Body: {"dna": ["ATGCGA","CAGTGC","TTATTT","AGACGG","GCGTCA","TCACTG"]}
         - GET -> URL: localhost:8080/stats
